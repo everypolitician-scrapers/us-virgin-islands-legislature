@@ -23,13 +23,25 @@ class MembersPage < Scraped::HTML
   end
 end
 
+class MemberPage < Scraped::HTML
+  decorator Scraped::Response::Decorator::CleanUrls
+
+  field :id do
+    url.to_s.split('/').last.sub('senator-', '')
+  end
+
+  field :image do
+    noko.css('img[src*="/Senators/"]/@src').text
+  end
+
+  field :source do
+    url.to_s
+  end
+end
+
 def scraper(h)
   url, klass = h.to_a.first
   klass.new(response: Scraped::Request.new(url: url).response)
-end
-
-def noko_for(url)
-  Nokogiri::HTML(open(url).read)
 end
 
 def scrape_list(url)
@@ -39,14 +51,7 @@ def scrape_list(url)
 end
 
 def scrape_person(name, url)
-  noko = noko_for(url)
-  data = {
-    id:     url.to_s.split('/').last.sub('senator-', ''),
-    name:   name.sub('Senator ', ''),
-    image:  noko.css('img[src*="/Senators/"]/@src').text,
-    source: url.to_s,
-  }
-  data[:image] = URI.join(url, data[:image]).to_s unless data[:image].to_s.empty?
+  data = scraper(url => MemberPage).to_h.merge(name: name.sub('Senator ',''))
   puts data.reject { |_, v| v.to_s.empty? }.sort_by { |k, _| k }.to_h if ENV['MORPH_DEBUG']
   ScraperWiki.save_sqlite([:id], data)
 end
