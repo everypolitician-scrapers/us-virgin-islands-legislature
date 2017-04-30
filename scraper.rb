@@ -34,4 +34,5 @@ def scrape_person(name, url)
   ScraperWiki.save_sqlite([:id], data)
 end
 
+ScraperWiki.sqliteexecute('DROP TABLE data') rescue nil
 scrape_list('http://www.legvi.org/index.php/senator-marvin-blyden')
