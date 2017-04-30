@@ -1,5 +1,6 @@
 #!/bin/env ruby
 # encoding: utf-8
+# frozen_string_literal: true
 
 require 'scraperwiki'
 require 'nokogiri'
@@ -23,10 +24,10 @@ end
 
 def scrape_person(name, url)
   noko = noko_for(url)
-  data = { 
-    id: url.to_s.split("/").last.sub('senator-',''),
-    name: name.sub('Senator ', ''),
-    image: noko.css('img[src*="/Senators/"]/@src').text,
+  data = {
+    id:     url.to_s.split('/').last.sub('senator-', ''),
+    name:   name.sub('Senator ', ''),
+    image:  noko.css('img[src*="/Senators/"]/@src').text,
     source: url.to_s,
   }
   data[:image] = URI.join(url, data[:image]).to_s unless data[:image].to_s.empty?
