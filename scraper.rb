@@ -44,17 +44,11 @@ def scraper(h)
   klass.new(response: Scraped::Request.new(url: url).response)
 end
 
-def scrape_list(url)
-  scraper(url => MembersPage).members.each do |mem|
-    scrape_person(mem[:name], mem[:url])
-  end
+url = 'http://www.legvi.org/index.php/senator-marvin-blyden'
+data = scraper(url => MembersPage).members.map do |mem|
+  scraper(mem[:url] => MemberPage).to_h.merge(name: mem[:name].sub('Senator ',''))
 end
-
-def scrape_person(name, url)
-  data = scraper(url => MemberPage).to_h.merge(name: name.sub('Senator ',''))
-  puts data.reject { |_, v| v.to_s.empty? }.sort_by { |k, _| k }.to_h if ENV['MORPH_DEBUG']
-  ScraperWiki.save_sqlite([:id], data)
-end
+data.each { |mem| puts mem.reject { |_, v| v.to_s.empty? }.sort_by { |k, _| k }.to_h } if ENV['MORPH_DEBUG']
 
 ScraperWiki.sqliteexecute('DROP TABLE data') rescue nil
-scrape_list('http://www.legvi.org/index.php/senator-marvin-blyden')
+ScraperWiki.save_sqlite([:id], data)
